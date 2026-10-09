@@ -5,13 +5,19 @@ namespace LunaLib.Text;
 
 public class TranslationsKeeper // be careful of FileNotFoundExceptation and make sure json file is valid for parsing
 {
+	public Dictionary<string, string> FallBackTranslations {get; private set;}
 	public Dictionary<string, string> Translations {get; private set;}
-	public string LanguagePath = "";
 	
-	public TranslationsKeeper(string languagePath)
+	public string LanguagePath = "";
+	public string FallBackLanguagePath = ""; // this should include all languages!
+	
+	public TranslationsKeeper(string languagePath, string fallBackLanguagePath)
 	{
 		this.LanguagePath = languagePath;
+		this.FallBackLanguagePath = fallBackLanguagePath;
+
 		this.UpdateTranslations();
+		this.UpdateFallBackTranslations();
 	}
 
 	public void UpdateTranslations()
@@ -21,14 +27,21 @@ public class TranslationsKeeper // be careful of FileNotFoundExceptation and mak
 		this.Translations = JsonSerializer.Deserialize<Dictionary<string, string>>(openStream);
 	}
 	
+	public void UpdateFallBackTranslations()
+	{
+		using FileStream openStream = File.OpenRead(this.FallBackLanguagePath);
+		
+		this.FallBackTranslations = JsonSerializer.Deserialize<Dictionary<string, string>>(openStream);
+	}
+	
 	public string GetTranslation(string key, string[] placeIntoTranslation = null, string replaceTextHolder = "$%s")
 	{
-		string translation = this.Translations[key];
+		string translation = this.Translations.GetValueOrDefault(key, this.FallBackTranslations.GetValueOrDefault(key, "(KeyNotFoundException: Given key to \"TranslationsKeeper\" was not found in current language or fallback language)"));
 		int index = 0;
 		
 		if (placeIntoTranslation is {Length: > 0})
 		{
-			translation = Regex.Replace(translation, replaceTextHolder, m => 
+			translation = Regex.Replace(translation, Regex.Escape(replaceTextHolder), m => 
        		{
           		if (index < placeIntoTranslation.Length)
           		{
