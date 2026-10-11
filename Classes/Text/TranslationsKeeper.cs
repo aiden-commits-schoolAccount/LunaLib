@@ -8,8 +8,8 @@ namespace LunaLib.Text;
 
 public class TranslationsKeeper // be careful of FileNotFoundExceptation and make sure json file is valid for parsing
 {
-	public Dictionary<string, string> FallBackTranslations {get; private set;}
-	public Dictionary<string, string> Translations {get; private set;}
+	public Dictionary<string, string> FallBackTranslations {get; private set;} = [];
+	public Dictionary<string, string> Translations {get; private set;} = [];
 	
 	public string LanguagePath = "";
 	public string FallBackLanguagePath = ""; // this should include all keys!
@@ -37,7 +37,7 @@ public class TranslationsKeeper // be careful of FileNotFoundExceptation and mak
 		this.FallBackTranslations = JsonSerializer.Deserialize<Dictionary<string, string>>(openStream) ?? throw new JsonException("Fallback translation file cannot contain null.");
 	}
 	
-	public string GetTranslation(string key, string[] placeIntoTranslation = null, string replaceTextHolder = "$%s")
+	public string GetTranslation(string key, string[]? placeIntoTranslation = null, string replaceTextHolder = "$%s")
 	{
 		string translation = this.Translations.GetValueOrDefault(key, this.FallBackTranslations.GetValueOrDefault(key, "(KeyNotFoundException: Given key to \"TranslationsKeeper\" was not found in current language or fallback language)"));
 		int index = 0;
